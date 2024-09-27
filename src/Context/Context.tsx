@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useEffect, useState } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { db, getauth } from "../Firebase/Firebase";
 import { doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { UploadImage } from "./UploadImage";
@@ -26,17 +26,45 @@ export const useFirebase = () => {
 
 export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     const navigate = useNavigate()
-    const { currentUser } = useUserStore();
+    const { currentUser,fetchuserinfo } = useUserStore();
     // window load status change
-    window.addEventListener("beforeunload", async (event:any) => {
-        event.preventDefault()
-        if (currentUser) {
-          await updateDoc(doc(db, "users", currentUser.id), {
-            status: "offline",
-            lastOnline: serverTimestamp(),
-          });
-        }
-      });
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(getauth, async (user) => {
+            if (user) {
+                // User is signed in, set status to online
+                await updateDoc(doc(db, "users", user.uid), {
+                    status: "online",
+                    lastOnline: serverTimestamp(),
+                });
+                fetchuserinfo({ id: user.uid, email: user.email });  // Update currentUser in state
+            } else {
+                // User is signed out
+                if (currentUser?.id) {
+                    await updateDoc(doc(db, "users", currentUser.id), {
+                        status: "offline",
+                        lastOnline: serverTimestamp(),
+                    });
+                }
+                fetchuserinfo(null);  // Clear currentUser from state
+            }
+        });
+        return () => unsubscribe();
+    }, [currentUser?.id, fetchuserinfo]);
+
+    // Mark user as offline when window is closed or refreshed
+    useEffect(() => {
+        const handleBeforeUnload = async () => {
+            if (currentUser?.id) {
+                await updateDoc(doc(db, "users", currentUser.id), {
+                    status: "offline",
+                    lastOnline: serverTimestamp(),
+                });
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, [currentUser?.id]);
+
 
 
         const [authStatus, setAuthStatus] = useState<{
@@ -69,9 +97,13 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
                 await setDoc(doc(db, "userchats", res.user.uid), {
                     chats: []
                 });
+                await setDoc(doc(db, "Groupuser", res.user.uid), {
+                    userGroup: []
+                });
+
                 setAuthStatus((prev: any) => ({ ...prev, signupSuccess: true }));
                 toast.success("Signup successful! Redirecting to chat...");
-                navigate('/'); // Navigate to chat page on successful signup
+                navigate('/login'); // Navigate to chat page on successful signup
             } catch (error) {
                 // Handle errors here
                 setAuthStatus((prev: any) => ({ ...prev, signupSuccess: false }));
@@ -100,7 +132,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
                 setAuthStatus((prev) => ({ ...prev, logoutSuccess: true }));
                 toast.success("Logged out successfully!");
-                navigate('/'); // Navigate to home page or login page after logout
+                navigate('/login'); // Navigate to home page or login page after logout
                 const user = currentUser.id;
                 if (user) {
                     // Set status to offline before logging out
@@ -122,7 +154,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
             if (authStatus.signupSuccess === false) {
                 toast.error("Signup failed. Please try again.");
             }
-        }, [authStatus.signupSuccess, navigate]);
+        }, [authStatus.signupSuccess, currentUser]);
 
         useEffect(() => {
             if (authStatus.signinSuccess) {
@@ -131,12 +163,12 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
             if (authStatus.signinSuccess === false) {
                 toast.error("Login failed. Please check your credentials.");
             }
-        }, [authStatus.signinSuccess, navigate]);
+        }, [authStatus.signinSuccess, currentUser]);
         useEffect(() => {
             if (authStatus.logoutSuccess) {
                 console.log("Logged out successfully!");
             }
-        }, [authStatus.logoutSuccess, navigate]);
+        }, [authStatus.logoutSuccess, currentUser]);
         return (
             <FirebaseContext.Provider value={{ signup, signin, logout }}>
                 {children}

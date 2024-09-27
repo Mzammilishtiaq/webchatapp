@@ -81,7 +81,7 @@ function Register() {
                                                 labelClassName='flex gap-1'
                                                 type="file"
                                                 variant="borderNone"
-                                                placeholder="Enter Email ID"
+                                                // placeholder="Enter Email ID"
                                                 handldChange={handleAvatar} // This manages the file upload outside Formik
                                                 className='w-full sm:w-full border-none'
                                             />

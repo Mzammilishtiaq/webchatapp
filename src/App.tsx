@@ -1,7 +1,8 @@
-import { Navigate, Route, Routes } from "react-router-dom"
+import { Link, Navigate, Route, Routes } from "react-router-dom"
 import Register from "./Pages/Auth/Register"
 import Login from "./Pages/Auth/Login"
 import Chat from "./Pages/chat"
+import Group from "./Pages/GroupChat/index"
 import Notification from "./Components/nofitacation"
 import { onAuthStateChanged } from "firebase/auth"
 import { db, getauth } from './Firebase/Firebase'
@@ -41,11 +42,17 @@ function App() {
   </div>
   return (
     <div>
+        <div className="flex gap-5">
+          <Link to={'/chat'}>Chat</Link>
+          <Link to={'/group'}>Group</Link>
+        </div>
       <Routes>
         {currentUser ? (
           <>
             <Route path="/chat" element={<Chat />} />
+            <Route path="/group" element={<Group />} />
             <Route path="/" element={<Navigate to="/chat" />} />
+
           </>
         ) : (
           <>

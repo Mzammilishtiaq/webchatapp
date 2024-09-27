@@ -2,7 +2,7 @@ import { Form, Formik } from "formik"
 import Input from "../../../Components/Input"
 // import * as Yup from 'yup'
 // import M from '../../../assets/img/M.jpg'
-import { arrayUnion, collection, doc, getDocs, query, setDoc, updateDoc, where, serverTimestamp} from "firebase/firestore"
+import { arrayUnion, collection, doc, getDocs, query, setDoc, updateDoc, where, serverTimestamp } from "firebase/firestore"
 import { db } from "../../../Firebase/Firebase"
 import { useState } from "react"
 import { useUserStore } from "../../../Context/useStore"
@@ -42,7 +42,7 @@ function AddUser() {
       const newChatRef = doc(chatRef)
       await setDoc(newChatRef, {
         createdAt: serverTimestamp(),
-        message: [],
+        messages: [],
       });
 
       const currentUserChatRef = doc(userchatRef, currentUser.id);  // Fixed for current user
@@ -73,7 +73,8 @@ function AddUser() {
 
 
   return (
-    <div className="flex flex-col gap-3 absolute top-[20%] left-[110%] right-0 bottom-0 bg-[#0000007e]  p-4 rounded-lg w-[100%] h-40 z-50">
+    <div className="flex flex-col gap-3 absolute top-[20%] left-[110%] right-0 bottom-0 bg-[#00000085]  p-4 rounded-lg w-[100%] h-40 z-50">
+      <h1 className="text-lg font-semibold text-white">Add User</h1>
       <Formik initialValues={intialvaluesdata} onSubmit={handleSubmit}>
         {
           ({ handleChange, errors, handleBlur, touched, values }) => (

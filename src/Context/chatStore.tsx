@@ -6,8 +6,8 @@ type Store = {
     user: any,
     isCurrentUser: boolean,
     isreciverBlocked: boolean,
-    changeChat:any,
-    changeBlock:any
+    changeChat: any,
+    changeBlock: any
 }
 
 export const useChatStore = create<Store>((set: any) => ({
@@ -38,8 +38,8 @@ export const useChatStore = create<Store>((set: any) => ({
             })
         }
 
-        else{
-           return set({
+        else {
+            return set({
                 chatId,
                 user: user,
                 isCurrentUser: false,
@@ -47,7 +47,7 @@ export const useChatStore = create<Store>((set: any) => ({
             })
         }
     },
-    changeBlock:()=>{
-        set((state: { isreciverBlocked: any; }) =>({...state,isreciverBlocked: !state.isreciverBlocked}))
+    changeBlock: () => {
+        set((state: { isreciverBlocked: any; }) => ({ ...state, isreciverBlocked: !state.isreciverBlocked }))
     }
 }))
